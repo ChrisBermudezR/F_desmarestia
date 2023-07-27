@@ -23,6 +23,7 @@ F_desmarestia = spocc::occ(query = c('Firoloida desmarestia',
                                      'obis',
                                      'idigbio'), 
 limit = 50000)
+
 head(F_desmarestia)
 
 Occurrencias_F_desmarestia=spocc::occ2df(F_desmarestia)
@@ -48,11 +49,14 @@ OccObis<-robis::occurrence(scientificname = c('Firoloida desmarestia',
                                               'Firoloida demarestia',
                                               'Firoloida kowalewskyi',
                                               'Firoloida liguriae',
-                                              'Pterotrachea lesueri'),
-                           fields=c("year", "month", "day"))
+                                              'Pterotrachea lesueri'))
+
+map_leaflet(OccObis)
 
 selectObis<-as.data.frame(cbind(OccObis$scientificName,OccObis$decimalLongitude,OccObis$decimalLatitude,OccObis$prov,OccObis$eventDate,OccObis$id))
+
 prov<-rep('Obis',82)
+
 selectObis$prov<-prov
 colnames(selectObis)<-c('name','longitude','latitude','date','key','prov')
 selectObis<-selectObis[c('name','longitude','latitude','prov','date','key')]
@@ -102,8 +106,8 @@ OccObis$Fecha<-  with(OccObis, paste(format(as.Date(OccObis$year), "%Y"),
 OccObis$Fecha[OccObis$Fecha == 'NA-NA-NA']<-NA
 OccObis$Fecha<-as.Date(OccObis$Fecha)
 OccObis$prov<-"obis"
-colnames(OccObis)<-c("latitude", "longitude", "eventDate", "name", "key", "day", "month", "year", "date", "prov")
-obisT<-as.data.frame(cbind(OccObis$name, OccObis$longitude, OccObis$latitude, OccObis$prov, format(as.Date(OccObis$date), "%Y-%m-%d") , OccObis$key))
+colnames(OccObis)<-c("latitude", "longitude", "name", "key", "day", "eventDate ", "month", "year", "Fecha", "prov")
+obisT<-as.data.frame(cbind(OccObis$name, OccObis$longitude, OccObis$latitude, OccObis$prov, format(as.Date(OccObis$Fecha), "%Y-%m-%d") , OccObis$key))
 colnames(obisT)<-colnames(Occurrencias_F_desmarestia)
   
 Occurrencias_F_desmarestia$date<-as.character(Occurrencias_F_desmarestia$date)
@@ -112,7 +116,14 @@ Occurrencias_F_desmarestia$date<-as.character(Occurrencias_F_desmarestia$date)
 total<-rbind(obisT, Occurrencias_F_desmarestia)
 total$date<-as.Date(total$date)
 class(total$date)
+colnames(total)<-c("name", "decimalLongitude", "decimalLatitude", "prov", "day", "key")
 
-duplicated(total)
+total$decimalLatitude<-as.numeric(total$decimalLatitude)
+total$decimalLongitude<-as.numeric(total$decimalLongitude)
 
+
+total_info<-duplicated(total)
+total_Sin_Dupli<-total[!total_info,]
+
+map_leaflet(total_Sin_Dupli)
 write.table(total, "Fdesmarestia_Occ_totales.csv", col.names = TRUE, row.names = FALSE, sep=",", dec=".")
